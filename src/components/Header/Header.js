@@ -1,18 +1,18 @@
 import React from 'react'
-import { IndexLink, Link } from 'react-router'
 import classes from './Header.scss'
-
-export const Header = () => (
-  <div>
-    <h1>React Redux Starter Kit</h1>
-    <IndexLink to='/' activeClassName={classes.activeRoute}>
-      Home
-    </IndexLink>
-    {' · '}
-    <Link to='/counter' activeClassName={classes.activeRoute}>
-      Counter
-    </Link>
+import AppBar from 'material-ui/AppBar'
+import Spinner from '../Spinner'
+export const Header = (props) => (
+  <div className={classes.header}>
+    <AppBar
+      title={props.username}
+      iconElementLeft={props.isLoading ? <Spinner /> : null}
+    />
   </div>
 )
 
+Header.propTypes = {
+  username: React.PropTypes.string,
+  isLoading: React.PropTypes.bool
+}
 export default Header

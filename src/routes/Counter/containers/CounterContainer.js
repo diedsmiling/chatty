@@ -14,7 +14,8 @@ import Counter from 'components/Counter'
 
 const mapDispatchToProps = {
   increment: () => increment(1),
-  doubleAsync
+  doubleAsync,
+
 }
 
 const mapStateToProps = (state) => ({
