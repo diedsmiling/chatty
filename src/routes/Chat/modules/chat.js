@@ -163,12 +163,10 @@ export const sendName = (data) => {
     dispatch(startNameRequest())
     emit('sendName', data)
       .then(response => {
-        console.log(response)
         dispatch(toggleNameForm())
         dispatch(resolveNameRequest(response))
       })
       .catch(error => {
-        console.log(error)
         dispatch(rejectNameRequest(error))
       })
   }
