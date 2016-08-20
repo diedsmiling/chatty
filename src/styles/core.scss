@@ -20,4 +20,9 @@
   *:after {
     box-sizing: inherit;
   }
+  #root{
+    [type=button]{
+      -webkit-appearance: none
+    }
+  }
 }

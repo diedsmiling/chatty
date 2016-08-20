@@ -1,13 +1,13 @@
 import React, {Component} from 'react'
 import { connect } from 'react-redux'
 import {bindActionCreators} from 'redux'
-import { actions } from 'routes/Chat/modules/chat'
-import Header from '../components/Header'
+import { actions } from '../modules/chat'
+import UsersDrawer from '../components/UsersDrawer/UsersDrawer'
 
 @connect(mapStateToProps, mapDispatchToProps)
 export default class ChatContainer extends Component {
   render () {
-    return <Header {...this.props} />
+    return <UsersDrawer {...this.props} />
   }
 }
 
@@ -20,8 +20,7 @@ function mapDispatchToProps (dispatch) {
 
 function mapStateToProps (state) {
   return {
-    username: state.chat.user.name,
-    isLoading: state.chat.isLoading,
-    isNameFormVisible: state.chat.isNameFormVisible
+    isDrawerOpen: state.chat.isDrawerOpen,
+    users: state.chat.users
   }
 }

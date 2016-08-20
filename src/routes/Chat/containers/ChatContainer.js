@@ -22,7 +22,6 @@ function mapDispatchToProps (dispatch) {
 
 function mapStateToProps (state) {
   return {
-    counter: state.counter,
     user: state.chat.user
   }
 }

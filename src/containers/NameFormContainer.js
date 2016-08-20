@@ -1,8 +1,8 @@
-import { actions } from '../modules/chat'
-import SendMessagePanel from '../components/SendMessagePanel/SendMessagePanel'
+import { actions } from 'routes/Chat/modules/chat'
+import NameForm from 'components/Header/NameForm/NameForm'
 import { reduxForm } from 'redux-form'
 const fields = [
-  'message',
+  'name',
   'userId'
 ]
 
@@ -10,7 +10,7 @@ function mapDispatchToProps (dispatch) {
   return {
     dispatch,
     onSubmit (data) {
-      dispatch(actions.sendMessage(data))
+      dispatch(actions.sendName(data))
     }
   }
 }
@@ -18,7 +18,7 @@ function mapDispatchToProps (dispatch) {
 function mapStateToProps (state) {
   return {
     initialValues: {
-      message: '',
+      name: state.chat.user.name,
       userId: state.chat.user.id
     }
   }
@@ -31,4 +31,4 @@ export default reduxForm(
   },
   mapStateToProps,
   mapDispatchToProps
-)(SendMessagePanel)
+)(NameForm)

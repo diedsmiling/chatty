@@ -1,16 +1,9 @@
 import React, { Component, PropTypes } from 'react'
 import { Router } from 'react-router'
 import { Provider } from 'react-redux'
-import socketCluster from 'socketcluster-client'
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider'
-
-const socket = socketCluster.connect({
-  port: 8000
-})
-//socket.emit('sampleClientEvent', 'This is a PING message')
-//socket.on('rand', function(data) {
-//  console.log(data)
-//})
+import injectTapEventPlugin from 'react-tap-event-plugin'
+injectTapEventPlugin()
 
 class AppContainer extends Component {
   static propTypes = {

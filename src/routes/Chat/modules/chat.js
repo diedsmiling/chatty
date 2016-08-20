@@ -1,38 +1,120 @@
 import update from 'react-addons-update'
 import socketCluster from 'socketcluster-client'
 import {SOCKET_OPTIONS} from '../../../configs'
+import { isEqual } from 'lodash'
 
 const socket = socketCluster.connect(SOCKET_OPTIONS)
 
 // ------------------------------------
 // Constants
 // ------------------------------------
-export const COUNTER_INCREMENT = 'COUNTER_INCREMENT'
-export const REQUEST_AUTH_START = 'REQUEST_AUTH_START'
-export const REQUEST_AUTH_ERROR = 'REQUEST_AUTH_ERROR'
-export const REQUEST_AUTH_SUCCESS = 'REQUEST_AUTH_SUCCESS'
-export const INPUT_CHANGE = 'INPUT_CHANGE'
+export const AUTH_REQUEST_START = 'AUTH_REQUEST_START'
+export const AUTH_REQUEST_ERROR = 'AUTH_REQUEST_ERROR'
+export const AUTH_REQUEST_SUCCESS = 'AUTH_REQUEST_SUCCESS'
+export const MESSAGE_REQUEST_START = 'MESSAGE_REQUEST_START'
+export const MESSAGE_REQUEST_ERROR = 'MESSAGE_REQUEST_ERROR'
+export const MESSAGE_REQUEST_SUCCESS = 'MESSAGE_REQUEST_SUCCESS'
+export const NAME_REQUEST_START = 'NAME_REQUEST_START'
+export const NAME_REQUEST_ERROR = 'NAME_REQUEST_ERROR'
+export const NAME_REQUEST_SUCCESS = 'NAME_REQUEST_SUCCESS'
+export const UPDATE_MESSAGES = 'UPDATE_MESSAGES'
+export const TOGGLE_DRAWER = 'TOGGLE_DRAWER'
+export const UPDATE_USERS = 'UPDATE_USERS'
+export const TOGGLE_NAME_FORM = 'TOGGLE_NAME_FORM'
 
 // ------------------------------------
 // Actions
 // ------------------------------------
-function startRequestAuth () {
+function startAuthRequest () {
   return {
-    type: REQUEST_AUTH_START
+    type: AUTH_REQUEST_START
   }
 }
 
-function resolveRequestAuth (user) {
+function resolveAuthRequest (data) {
   return {
-    type: REQUEST_AUTH_SUCCESS,
-    user
+    type: AUTH_REQUEST_SUCCESS,
+    data
   }
 }
 
-function rejectRequestAuth (error) {
+function resolveNameRequest (data) {
   return {
-    type: REQUEST_AUTH_ERROR,
+    type: NAME_REQUEST_SUCCESS,
+    data
+  }
+}
+
+function rejectAuthRequest (error) {
+  return {
+    type: AUTH_REQUEST_ERROR,
     error
+  }
+}
+
+function startMessageRequest () {
+  return {
+    type: MESSAGE_REQUEST_START
+  }
+}
+
+function resolveMessageRequest (message) {
+  return {
+    type: MESSAGE_REQUEST_SUCCESS,
+    message
+  }
+}
+
+function rejectMessageRequest (error) {
+  return {
+    type: MESSAGE_REQUEST_ERROR,
+    error
+  }
+}
+
+function startNameRequest () {
+  return {
+    type: NAME_REQUEST_START
+  }
+}
+
+function rejectNameRequest (error) {
+  return {
+    type: NAME_REQUEST_ERROR,
+    error
+  }
+}
+
+function updateMessages (messages) {
+  return {
+    type: UPDATE_MESSAGES,
+    messages
+  }
+}
+
+function fetchMessages (state, action) {
+  return update(state, {
+    messages: {$set: action.messages},
+    isLoading: {$set: false}
+  })
+}
+
+export function toggleDrawer () {
+  return {
+    type: TOGGLE_DRAWER
+  }
+}
+
+export function toggleNameForm () {
+  return {
+    type: TOGGLE_NAME_FORM
+  }
+}
+
+export function updateUsers (users) {
+  return {
+    type: UPDATE_USERS,
+    users
   }
 }
 
@@ -50,57 +132,144 @@ function emit (event, data) {
 
 export function requestAuth () {
   return dispatch => {
-    dispatch(startRequestAuth())
+    dispatch(startAuthRequest())
     emit('registerUser', '')
       .then(response => {
-        dispatch(resolveRequestAuth(response))
+        dispatch(resolveAuthRequest(response))
       })
       .catch(error => {
-        dispatch(rejectRequestAuth(error))
+        console.error(error)
+        console.error('You had an error: ', error.stack)
+        dispatch(rejectAuthRequest(error))
       })
   }
 }
 
-export const doubleAsync = () => {
-  return (dispatch, getState) => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve()
-      }, 200)
+export const sendMessage = (data) => {
+  return dispatch => {
+    dispatch(startMessageRequest())
+    emit('sendMessage', data)
+      .then(response => {
+        //dispatch(resolveMessageRequest(response))
+      })
+      .catch(error => {
+        dispatch(rejectMessageRequest(error))
+      })
+  }
+}
+
+export const sendName = (data) => {
+  return dispatch => {
+    dispatch(startNameRequest())
+    emit('sendName', data)
+      .then(response => {
+        console.log(response)
+        dispatch(toggleNameForm())
+        dispatch(resolveNameRequest(response))
+      })
+      .catch(error => {
+        console.log(error)
+        dispatch(rejectNameRequest(error))
+      })
+  }
+}
+
+export const pingServer = (id) => {
+  setInterval(() => {
+    socket.emit('ping', id)
+  }, 1000)
+}
+
+export const watchForMessages = (messages, users) => {
+  console.log('Watching ....')
+  return dispatch => {
+    socket.on('data', function (data) {
+      if (data.messages && (!isEqual(data.messages, messages))) {
+        messages = data.messages
+        dispatch(updateMessages(data.messages))
+      }
+      if (data.users && (!isEqual(data.users, users))) {
+        users = data.users
+        dispatch(updateUsers(data.users))
+      }
     })
   }
 }
 
 export const actions = {
-  doubleAsync,
-  requestAuth
+  sendMessage,
+  requestAuth,
+  watchForMessages,
+  toggleDrawer,
+  toggleNameForm,
+  sendName
 }
 
 // ------------------------------------
 // Action Handlers
 // ------------------------------------
 const ACTION_HANDLERS = {
-  [REQUEST_AUTH_SUCCESS]: (state, action) => {
+  [AUTH_REQUEST_SUCCESS]: (state, action) => {
     return update(state, {
       user: {
-        $set: action.user
+        $set: action.data.user
+      },
+      messages: {
+        $set: action.data.messages
       },
       isLoading: { $set: false }
     })
   },
-  [REQUEST_AUTH_START]: state => {
+  [AUTH_REQUEST_START]: state => {
     return update(state, {
       isLoading: { $set: true }
     })
   },
-  [REQUEST_AUTH_ERROR]: (state, action) => {
-    console.warn('ERROR', action.error)
+  [AUTH_REQUEST_ERROR]: (state, action) => {
     return update(state, {
       isLoading: { $set: false },
       error: { $set: action.error }
     })
+  },
+  [MESSAGE_REQUEST_START]: (state) => {
+    return update(state, {
+      isLoading: { $set: true }
+    })
+  },
+  [MESSAGE_REQUEST_SUCCESS]: (state, action) => {
+    return update(state, {
+      isLoading: { $set: false }
+    })
+  },
+  [UPDATE_MESSAGES]: (state, action) => {
+    return fetchMessages(state, action)
+  },
+  [MESSAGE_REQUEST_ERROR]: (state, action) => {
+    return update(state, {
+      isLoading: {$set: false},
+      error: {$set: action.error}
+    })
+  },
+  [TOGGLE_DRAWER]: (state) => {
+    return update(state, {
+      isDrawerOpen: { $apply: v => !v }
+    })
+  },
+  [TOGGLE_NAME_FORM]: (state) => {
+    return update(state, {
+      isNameFormVisible: { $apply: v => !v }
+    })
+  },
+  [UPDATE_USERS]: (state, action) => {
+    return update(state, {
+      users: {$set: action.users}
+    })
+  },
+  [NAME_REQUEST_SUCCESS]: (state, action) => {
+    return update(state, {
+      user: {$set: action.data}
+    })
   }
-
 }
 
 // ------------------------------------
@@ -109,8 +278,11 @@ const ACTION_HANDLERS = {
 const initialState = ({
   isLoading: false,
   isDrawerOpen: false,
+  isNameFormVisible: false,
   user: {},
-  error: {}
+  error: {},
+  messages: [],
+  users: []
 })
 
 export default function chatReducer (state = initialState, action) {
